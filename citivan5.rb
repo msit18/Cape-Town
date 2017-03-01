@@ -24,7 +24,7 @@ module Couch
  
   class Server 
     def initialize(host, port, options = nil) 
-      #puts "SERVER INITIALIZED AND ESTABLISHING VARIABLES------------------------------------"
+      #log "SERVER INITIALIZED AND ESTABLISHING VARIABLES------------------------------------"
       @host = host 
       @port = port 
       @options = options 
@@ -63,40 +63,40 @@ end
 
 class Citivan
   def initialize (callerID)
-    #puts "INITIALZIING CITIVAN-----------------------------------------------------------------------"
+    #log "INITIALZIING CITIVAN-----------------------------------------------------------------------"
     @callerID = callerID
-    #puts "ESTABLISHED CALLERID VARIABLE---------------------------------------------------------------"
+    #log "ESTABLISHED CALLERID VARIABLE---------------------------------------------------------------"
     @json = getDBData("http://citivan.cloudant.com/citivan/testSample2/")
-    #puts "First @JSON: #{@json}"
-    #puts "ESTABLISHED JSON VALUE----------------------------------------------------------------------"
+    #log "First @JSON: #{@json}"
+    #log "ESTABLISHED JSON VALUE----------------------------------------------------------------------"
     @callerHashInfo = @json["people"]["#{callerID}"]
-    #puts "ESTABLISHED CALLERHASHINFO VALUE. END OF INITIALIZED-------------------------------------------------------------"
+    log "ESTABLISHED CALLERHASHINFO VALUE. END OF INITIALIZED-------------------------------------------------------------"
   end
 
   #This is a helper method to get data from couchDB 
   def getDBData(urlInput)
-    #puts "GETDBDATA BEFORE URL-------------------------------------------------------------------------"
+    #log "GETDBDATA BEFORE URL-------------------------------------------------------------------------"
     url = URI.parse(urlInput)
-    #puts "AFTER URL, BEFORE CONNECTING TO SERVER--------------------------------------------------------"
+    #log "AFTER URL, BEFORE CONNECTING TO SERVER--------------------------------------------------------"
     server = Couch::Server.new(url.host, url.port)
-    #puts "CONNECTED TO SERVER NOW GETTING URL-----------------------------------------------------------"
+    #log "CONNECTED TO SERVER NOW GETTING URL-----------------------------------------------------------"
     res = server.GET(urlInput)
-    #puts "PARSING JSON FILE----------------------------------------------------------------------------"
+    log "PARSING JSON FILE----------------------------------------------------------------------------"
     json = JSON.parse(res.body)
     return json
   end
 
   def getBusName(callerID, userText)
-    puts "GETBUSNAME RUNNING"
+    log "GETBUSNAME RUNNING"
     @busName = @json["people"]["#{callerID}"]["#{@surveyNum}"]["1"]
-    puts "BUSNAME: #{@busName}"
+    log "BUSNAME: #{@busName}"
     if @busName.to_s == "0"
       @busName = userText
       if @busJson.has_key?(userText.to_s) == false && userText != "rate"
-        puts "CREATING NEW BUS DATA"
+        log "CREATING NEW BUS DATA"
         @busJson["#{userText}"] = {"1" => "#{userText}", "2" => 0, "3" => 0, "4" => 0, "5" => 0, "6" => 0, "7" => 0, "8" => 0, "9" => 0, "10" => 0}
       end
-      puts "MAYBE CREATED NEW SURVEY?"
+      log "MAYBE CREATED NEW SURVEY?"
     end
     return @busName
   end
@@ -107,51 +107,51 @@ class Citivan
 
   #FIX: needs smart handling for bus numbers that start with rat or rtae
   def rateBus(userText, currentConvoNum)
-    puts "RATE FUNCTION"
-    puts userText
-    puts userText.slice!(0..4)
-    puts rateBusName = userText
-    puts @busJson.has_key?(rateBusName)
-    puts @busJson["#{rateBusName}"]
+    log "RATE FUNCTION"
+    log userText
+    log userText.slice!(0..4)
+    log rateBusName = userText
+    log @busJson.has_key?(rateBusName)
+    log @busJson["#{rateBusName}"]
     if @busJson.has_key?(rateBusName) == false
-      puts "BUS HAS NOT BEEN RATED YET"
-      return overrideReturnValue = "The bus #{rateBusName} has not been rated yet.\n\n"\
+      log "BUS HAS NOT BEEN RATED YET"
+      return overrideReturnValue = "The bus #{rateBusName} has not been rated yet."\
       "@@#{$questions[currentConvoNum-1]}"
     elsif @busJson["#{rateBusName}"]["10"] == 0
-      return overrideReturnValue = "The bus #{rateBusName} has not been rated yet.\n\n"\
+      return overrideReturnValue = "The bus #{rateBusName} has not been rated yet."\
       "@@#{$questions[currentConvoNum-1]}"
     else
-      puts "BUS RATING IS THE FOLLOWING"
+      log "BUS RATING IS THE FOLLOWING"
       question2Answer = calculateAverage(rateBusName, 2)/100
       return overrideReturnValue = "Rating for #{rateBusName} from #{@busJson[rateBusName]["10"]} riders:\n"\
       "Avg quality of ride: #{question2Answer}/5\n"\
       "#{calculateAverage(rateBusName, 3)}% think the driver speeds.\n"\
       "#{calculateAverage(rateBusName, 4)}% think the driver is courteous.\n"\
-      "#{calculateAverage(rateBusName, 5)}% think the van is clean.\n"\
+      "#{calculateAverage(rateBusName, 5)}% think the van is clean."\
       "@@#{$questions[currentConvoNum-1]}"
     end
   end
 
   #TODO: Revise when the bus ID format is provided
   def inputDataToCloudant(currentConvoNum, callerID, userText)
-    puts "INPUTTING DATA FUNCTION"
-    puts currentConvoNum
+    log "INPUTTING DATA FUNCTION"
+    log currentConvoNum
     getBusName(callerID, userText)
-    puts userText
+    log userText
     #All the incorrect inputs
     if currentConvoNum == 1
-      puts "FIRST QUESTION. PUTTING BUS NAME INTO THE SYSTEM"
+      log "FIRST QUESTION. PUTTING BUS NAME INTO THE SYSTEM"
       @json["people"]["#{callerID}"]["#{@surveyNum}"]["#{currentConvoNum}"] = userText
       @busJson["#{@busName}"]["#{currentConvoNum +5}"] += 1
       @json["people"]["#{callerID}"]["convoNum"] += 1
     elsif currentConvoNum == 2 && userText.to_i.between?(1,5) == true
-      puts "QUESTION TWO. PUTTING IN INFO"
+      log "QUESTION TWO. PUTTING IN INFO"
       @json["people"]["#{callerID}"]["#{@surveyNum}"]["#{currentConvoNum}"] = userText.to_i
       @busJson["#{@busName}"]["#{currentConvoNum}"] += userText.to_i
       @busJson["#{@busName}"]["#{currentConvoNum +5}"] += 1
       @json["people"]["#{callerID}"]["convoNum"] += 1
     elsif currentConvoNum > 2 && (userText.to_s == "yes" || userText.to_s == "no" || userText.to_i.between?(1,2))
-      puts "QUESTIONS THREE THROUGH FIVE. PUTTING IN INFO"
+      log "QUESTIONS THREE THROUGH FIVE. PUTTING IN INFO"
       if userText.to_s == "yes" || userText.to_i == 1
         @json["people"]["#{callerID}"]["#{@surveyNum}"]["#{currentConvoNum}"] = "yes"
         @busJson["#{@busName}"]["#{currentConvoNum}"] += 1
@@ -170,22 +170,22 @@ class Citivan
   def runNew(callerID, userText)
     #Connects to database server in initilize
     begin
-    puts "RUNNING BEGIN OF RUN NEW----------------------------------------------------------"
+    log "RUNNING BEGIN OF RUN NEW----------------------------------------------------------"
       ###DOES USER EXIST? If so, then all the other functions are allowed.
       #If this is a new user, disregard the input text and just create a new profile
       if @json["people"].has_key?(callerID.to_s) == true
-        puts "VERIFY USER EXISTS: USER ALREADY EXISTS"
+        log "VERIFY USER EXISTS: USER ALREADY EXISTS"
         newUser = false
         @busJson = getDBData("http://citivan.cloudant.com/citivan/busData/")
 
         #Creates new survey hash if last is full
         if @callerHashInfo["convoNum"] > 5 && userText != "rate"
-          puts "CREATING NEW SURVEY HASH. LAST SURVEY IS FULL"
+          log "CREATING NEW SURVEY HASH. LAST SURVEY IS FULL"
           @json["people"]["#{callerID}"]["convoNum"] = 1
           @json["people"]["#{callerID}"]["#{@callerHashInfo.length-1}"] = {"1" => 0, "2" => 0, "3" => 0, "4" => 0, "5" => 0}
         else
           currentConvoNum = @callerHashInfo["convoNum"]
-          puts "NUM ITEMS IN CALLERID: #{@callerHashInfo.length}"
+          log "NUM ITEMS IN CALLERID: #{@callerHashInfo.length}"
           @surveyNum = @callerHashInfo.length-1 #Note: convoNum item is removed from length
           overrideReturnValue = nil
 
@@ -196,7 +196,7 @@ class Citivan
           ###INPUT TEXT INTO SURVEY
           #TODO: error handling if NIL => repeat question
           else
-            puts "ELSE STATEMENT"
+            log "ELSE STATEMENT"
             inputDataToCloudant(currentConvoNum, callerID, userText)
 
           end
@@ -205,7 +205,7 @@ class Citivan
 
       ###NEW USER. Create new account. Disregarded input text.
       else
-        puts "VERIFY USER EXISTS: CREATE NEW PROFILE"
+        log "VERIFY USER EXISTS: CREATE NEW PROFILE"
         newCaller = {"1" => {"1" => 0, "2" => 0, "3" => 0, "4" => 0, "5" => 0}, "convoNum" => 1}
         @json["people"]["#{callerID}"] = newCaller
         newUser = true
@@ -213,8 +213,8 @@ class Citivan
       end #begin if/elseEnd
     
     ensure
-      puts "overrideReturnValue: #{overrideReturnValue}"
-      puts overrideReturnValue == nil
+      log "overrideReturnValue: #{overrideReturnValue}"
+      log overrideReturnValue == nil
       if overrideReturnValue == nil
         ###Note: store information into user databases
         returnValue = @json["people"]["#{callerID}"]["convoNum"]
@@ -231,7 +231,7 @@ class Citivan
       else
         returnValue = overrideReturnValue
       end
-      puts "RETURNVALUE: #{returnValue}"
+      log "RETURNVALUE: #{returnValue}"
     return returnValue
     
     end #begin/ensureEnd
@@ -244,21 +244,21 @@ def simulateSMS2(callerID, initialText)
   reply = initialText.downcase
   connect = Citivan.new(callerID.to_s)
   status = connect.runNew(callerID.to_s, reply)
-  puts "CELLPHONE TEXT:"
+  log "CELLPHONE TEXT:"
   if status.class != String && status.to_i <= 1
-      puts "Welcome to CitiVan! Please answer the following questions. To see the ratings of a van, send \"rate VanNumber\""
+      log "Welcome to CitiVan! Please answer the following questions. To see the ratings of a van, send \"rate VanNumber\""
       #wait(3000)
-      puts "#{$questions[0]}"
+      log "#{$questions[0]}"
   elsif status.class != Fixnum
       statusSplit = status.split('@@')
-      puts "#{statusSplit[0]}"
+      log "#{statusSplit[0]}"
       #wait(2000)
-      puts "Split here"
-      puts "#{statusSplit[1]}"
+      log "Split here"
+      log "#{statusSplit[1]}"
   else
-      puts "#{$questions[status-1.to_i]}"
+      log "#{$questions[status-1.to_i]}"
   end
-  puts "END OF CELLPHONE TEXT"
+  log "END OF CELLPHONE TEXT"
 end
 
 
@@ -272,52 +272,58 @@ $questions = ["What is your bus number?", "Pick a number from 1 to 5 to rate the
 
 ###################Execute code here
 
-puts "Welcome. What is your callerID?"
-caller = gets.chomp!
+#log "Welcome. What is your callerID?"
+#caller = gets.chomp!
 
-continue = true
-while continue == true
-  puts "What is your message?"
-  input = gets.chomp!
-  if input == "stop"
-    break
-  else
-    simulateSMS2(8583807847, input)
-  end
-end
+#continue = true
+#while continue == true
+#  log "What is your message?"
+#  input = gets.chomp!
+#  if input == "stop"
+#    break
+#  else
+#    simulateSMS2(8583807847, input)
+#  end
+#end
 
-#puts "Current call is active4 #{$currentCall.isActive}-----------------------------------------------"
+#log "Current call is active4 #{$currentCall.isActive}-----------------------------------------------"
 if $currentCall.isActive
-    puts "CURRENT CALL PHONE NUMBER IS #{$currentCall.callerID}---------------------------------------"
-    say "Current active phone is0 #{$currentCall.callerID}"
+    log "CURRENT CALL PHONE NUMBER IS #{$currentCall.callerID}---------------------------------------"
+    #say "Current active phone is2 #{$currentCall.callerID}"
 else
+    #call "+17788061682", { :network => "SMS"}
     call "+13392044253", { :network => "SMS"}
-    say "started new call2"
+    #say "started new call2"
 end
 
 
-puts "BEFORE REPLY --------------------------------------------"
+log "BEFORE REPLY --------------------------------------------"
 reply = $currentCall.initialText.downcase
-puts "REPLY IS #{reply}"
-puts "BEFORE CONNECT ------------------------------------------------------------------"
+log "REPLY IS #{reply}"
+log "BEFORE CONNECT ------------------------------------------------------------------"
 connect = Citivan.new($currentCall.callerID.to_s)
-puts "AFTER CONNECT --------------------------------------------------------"
+log "AFTER CONNECT --------------------------------------------------------"
 status = connect.runNew($currentCall.callerID.to_s, reply)
-puts "STATUS IS #{status}"
+log "STATUS IS #{status}"
 if status.class != String && status.to_i <= 1
-    #puts "WELCOME TO CITIVAN---------------------------------------------------------------------"
+    log "WELCOME TO CITIVAN---------------------------------------------------------------------"
     say "Welcome to CitiVan! Please answer the following questions. To see the ratings of a van, send \"rate VanNumber\""
+    log "SEND WELCOME MESSAGE--------------------------------------------------------------------"
     wait(3000)
     say "#{$questions[0]}"
+    log "SENT #{$questions[0]}--------------------------------------------------------------------"
 elsif status.class != Fixnum
-    #puts "STATUS CLASS FIXNUM----------------------------------------------------------------"
+    log "STATUS CLASS FIXNUM----------------------------------------------------------------"
     statusSplit = status.split('@@')
     say "#{statusSplit[0]}"
+    log "SENT SPLIT STATUS #{statusSplit[0]}----------------------------------------------------------------"
     wait(2000)
     say "#{statusSplit[1]}"
+    log "SEND SPLIT STATUS PART 2 #{statusSplit[1]}---------------------------------------------------------"
 else
-    #puts "ELSE VALUE RUNNING-----------------------------------------------------------------------"
+    log "ELSE VALUE RUNNING-----------------------------------------------------------------------"
     say "#{$questions[status-1.to_i]}"
+    log "SENT MESSAGE #{$questions[status-1.to_i]}------------------------------------------------------------"
 end
 
 hangup
