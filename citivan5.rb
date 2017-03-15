@@ -15,9 +15,7 @@
 #Everything in the json starts from 1 instead of 0. This is to improve readability for
 #non-computer science people.
 
-#INCORPORATE TIMES OF SURVEY ANSWERS
 #Create server for SMS questions to be sent to
-#Have all survey responses saved for each person
 
 require 'rubygems' 
 require 'net/http' 
@@ -86,7 +84,7 @@ class Citivan
   def getBusName(callerID, userText)
     puts "GETBUSNAME RUNNING"
     @busName = @json["people"]["#{callerID}"]["#{@surveyNum}"]["1"]
-    puts "BUSNAME: #{@busName}"
+    # puts "BUSNAME: #{@busName}"
     if @busName.to_s == "0"
       @busName = userText
       if @busJson.has_key?(userText.to_s) == false && userText != "rate"
@@ -107,10 +105,10 @@ class Citivan
     if avg.to_s.length > 4
       avgStr = avg.to_s.slice!(0..4)
       avgRound = avgStr.to_f.round(1)
-      puts "avg slice " + avgRound.to_s
+      # puts "avg slice " + avgRound.to_s
       return avgRound
     else
-      puts "running else statement. len is: " + avg.to_s.length.to_s
+      # puts "running else statement. len is: " + avg.to_s.length.to_s
       return avg
     end
   end
@@ -139,7 +137,7 @@ class Citivan
       "#{calculateAverage(rateBusName, 5)}% think the driver is courteous\n"\
       "#{calculateAverage(rateBusName, 6)}% feel safe\n"\
       "@@#{$questions[currentConvoNum-1]}"
-      puts "OVERRIDE FOR RATE: " + overrideReturnValue
+      # puts "OVERRIDE FOR RATE: " + overrideReturnValue
       return overrideReturnValue
     end
   end
@@ -163,12 +161,14 @@ class Citivan
       @json["people"]["#{callerID}"]["#{@surveyNum}"]["#{currentConvoNum}"] = userText
       @busJson["#{@busName}"]["#{currentConvoNum +6}"] += 1
       @json["people"]["#{callerID}"]["convoNum"] += 1
+      @json["people"]["#{callerID}"]["#{@surveyNum}"]["LastSubmitTime"] = Time.now + (60*60*6)
     elsif (currentConvoNum == 2 || currentConvoNum == 3) && userText.to_i.between?(1,5) == true
       puts "QUESTION TWO OR QUESTION 3. PUTTING IN INFO"
       @json["people"]["#{callerID}"]["#{@surveyNum}"]["#{currentConvoNum}"] = userText.to_i
       @busJson["#{@busName}"]["#{currentConvoNum}"] += userText.to_i
       @busJson["#{@busName}"]["#{currentConvoNum +6}"] += 1
       @json["people"]["#{callerID}"]["convoNum"] += 1
+      @json["people"]["#{callerID}"]["#{@surveyNum}"]["LastSubmitTime"] = Time.now + (60*60*6)
     elsif currentConvoNum > 3 && (userText.to_s == "yes" || userText.to_s == "no" || userText.to_i.between?(1,2))
       puts "QUESTIONS FOUR THROUGH SIX. PUTTING IN INFO"
       if userText.to_s == "yes" || userText.to_i == 1
@@ -180,6 +180,7 @@ class Citivan
       end
       @busJson["#{@busName}"]["#{currentConvoNum +6}"] += 1
       @json["people"]["#{callerID}"]["convoNum"] += 1
+      @json["people"]["#{callerID}"]["#{@surveyNum}"]["LastSubmitTime"] = Time.now + (60*60*6)
     else
       #Repeat question
     end
@@ -190,7 +191,6 @@ class Citivan
     #Connects to database server in initilize
     begin
       puts "RUNNING BEGIN OF RUN NEW-------------------------------"
-      # overrideReturnValue = beginDef(callerID, userText)
 
       ###DOES USER EXIST? If so, then all the other functions are allowed.
       #If this is a new user, disregard the input text and just create a new profile
@@ -203,7 +203,7 @@ class Citivan
         if @callerHashInfo["convoNum"] > 6 && userText != "rate"
           puts "CREATING NEW SURVEY HASH. LAST SURVEY IS FULL"
           @json["people"]["#{callerID}"]["convoNum"] = 1
-          @json["people"]["#{callerID}"]["#{@callerHashInfo.length-1}"] = {"1" => 0, "2" => 0, "3" => 0, "4" => 0, "5" => 0, "6" => 0}
+          @json["people"]["#{callerID}"]["#{@callerHashInfo.length}"] = {"LastSubmitTime" => 0, "1" => 0, "2" => 0, "3" => 0, "4" => 0, "5" => 0, "6" => 0}
         else
           currentConvoNum = @callerHashInfo["convoNum"]
           puts "NUM ITEMS IN CALLERID: #{@callerHashInfo.length}"
@@ -228,7 +228,7 @@ class Citivan
       ###NEW USER. Create new account. Disregarded input text.
       else
         puts "VERIFY USER EXISTS: CREATE NEW PROFILE"
-        newCaller = {"1" => {"1" => 0, "2" => 0, "3" => 0, "4" => 0, "5" => 0, "6" => 0}, "convoNum" => 1}
+        newCaller = {"1" => {"LastSubmitTime" => 0, "1" => 0, "2" => 0, "3" => 0, "4" => 0, "5" => 0, "6" => 0}, "convoNum" => 1}
         @json["people"]["#{callerID}"] = newCaller
         newUser = true
 
@@ -323,9 +323,8 @@ while continue == true
  end
 end
 
-# #log "Current call is active4 #{$currentCall.isActive}-----------------------------------------------"
+
 # if $currentCall.isActive
-#     log "CURRENT CALL PHONE NUMBER IS #{$currentCall.callerID}---------------------------------------"
 #     #say "Current active phone is2 #{$currentCall.callerID}"
 # else
 #     #call "+17788061682", { :network => "SMS"}
@@ -334,33 +333,22 @@ end
 # end
 
 
-# log "BEFORE REPLY --------------------------------------------"
 # reply = $currentCall.initialText.downcase
 # log "REPLY IS #{reply}"
-# log "BEFORE CONNECT ------------------------------------------------------------------"
 # connect = Citivan.new($currentCall.callerID.to_s)
-# log "AFTER CONNECT --------------------------------------------------------"
 # status = connect.runNew($currentCall.callerID.to_s, reply)
 # log "STATUS IS #{status}"
 # if status.class != String && status.to_i <= 1
-#     log "WELCOME TO CITIVAN---------------------------------------------------------------------"
 #     say "Welcome to CitiVan! Please answer the following questions. To see the ratings of a van, send \"rate VanNumber\""
-#     log "SEND WELCOME MESSAGE--------------------------------------------------------------------"
 #     wait(3000)
 #     say "#{$questions[0]}"
-#     log "SENT #{$questions[0]}--------------------------------------------------------------------"
 # elsif status.class != Fixnum
-#     log "STATUS CLASS FIXNUM----------------------------------------------------------------"
 #     statusSplit = status.split('@@')
 #     say "#{statusSplit[0]}"
-#     log "SENT SPLIT STATUS #{statusSplit[0]}----------------------------------------------------------------"
 #     wait(2000)
 #     say "#{statusSplit[1]}"
-#     log "SEND SPLIT STATUS PART 2 #{statusSplit[1]}---------------------------------------------------------"
 # else
-#     log "ELSE VALUE RUNNING-----------------------------------------------------------------------"
 #     say "#{$questions[status-1.to_i]}"
-#     log "SENT MESSAGE #{$questions[status-1.to_i]}------------------------------------------------------------"
 # end
 
-hangup
+# hangup
