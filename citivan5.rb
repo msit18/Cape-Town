@@ -311,17 +311,30 @@ $questions = ["3What are the last four digits of the minibus license plate? (Exa
 # puts "Welcome. What is your callerID? "
 # caller = gets.chomp!
 
+# caller=8583807857
+# continue = true
+# while continue == true
+#  puts "What is your message? "
+#  input = gets.chomp!
+#  if input == "stop"
+#    break
+#  else
+#    simulateSMS2(8583807847, input)
+#  end
+# end
+
 caller=8583807857
-continue = true
-while continue == true
- puts "What is your message? "
- input = gets.chomp!
- if input == "stop"
-   break
- else
-   simulateSMS2(8583807847, input)
- end
-end
+# continue = true
+# while continue == true
+puts "What is your message? "
+input = gets.chomp!
+# if input == "stop"
+#  #do nothing
+# else
+simulateSMS2(8583807847, input)
+ # end
+# end
+
 
 
 # if $currentCall.isActive
