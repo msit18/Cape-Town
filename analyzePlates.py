@@ -1,171 +1,141 @@
-file = open("plates.txt", 'rw')
-massiveArray = []
-massiveBus = []
+"""
+Written by Michelle Sit
 
-for line in file:
-	parse = line.rstrip()
-	parts = parse.split()
-	# currentVal = parts[1][len(parts[1])-7:]
-	currentVal = parts[1]
-	massiveBus.append(parts[0])
-	massiveArray.append(currentVal)
-# print massiveArray
-# print massiveBus
+Used to analyze different combinations of unique license plate characters
+Program can analyze 3 lines or across all lines
 
-def analyzeRoutesCluster():
+"""
+
+def analyzeRoutesClusterOnSingleLine(inputRoute):
+
+	routePlates = []
+	for x in range(len(allRouteVals)):
+		for busNum in inputRoute:
+			if allRouteVals[x] == str(busNum):
+				routePlates.append(allFullPlates[x])
+
+	# print "All Route License Plates: ", routePlates
+	print "Number of License Plates: ", len(routePlates)
+
+	print "========================================================="
+
+	uniqueID = set([plate for plate in routePlates 
+					if routePlates.count(plate) >= 1])
+
+	print "Unique License Plates: ", uniqueID
+	print "Number of unique plates: ", len(uniqueID)
+
+	print "========================================================="
+
+	shortened_Plate = [short[-4:] for short in uniqueID]
+	print "Option 1 last 4 digits: ", shortened_Plate
+
+	# shortened_Plate = [short[-3:] for short in uniqueID]
+	# print "Option 2 last 3 digits: ", shortened_Plate
+
+	# shortened_Plate = [short[2:6] for short in uniqueID]
+	# print "Option 3 Middle 4 digits: ", shortened_Plate
+
+	# shortened_Plate = [short[2:5] for short in uniqueID]
+	# print "Option 4 Middle 3 digits: ", shortened_Plate
+
+	# shortened_Plate = [short[:6] for short in uniqueID]
+	# print "Option 5 First 6 digits: ", shortened_Plate
+
+	# shortened_Plate = [short[:5] for short in uniqueID]
+	# print "Option 6 First 5 digits: ", shortened_Plate
+
+	print "Num of unique plates: ", len(shortened_Plate)
+	print "----------"
+
+	for each in shortened_Plate:
+		if shortened_Plate.count(each) > 1:
+			print "Number of shortID overlap: ", shortened_Plate.count(each)
+			print "ShortID value: ", each
+			print "----------"
+			shortened_Plate.remove(each)
+
+	# print "-------------------------"
+
+def analyzeRoutesClusterAcrossAllLines():
+
+	print "Length of all plates: ", len(allFullPlates)
+
+	allPlatesCrop = [short[-4:] for short in allFullPlates]
+	print "Option 1 last 4 digits: "
+
+	# allPlatesCrop = [short[-3:] for short in allFullPlates]
+	# print "Option 2 last 3 digits: "
+
+	# allPlatesCrop = [short[2:6] for short in allFullPlates]
+	# print "Option 3 Middle 4 digits: "
+
+	# allPlatesCrop = [short[2:5] for short in allFullPlates]
+	# print "Option 4 Middle 3 digits: "
+
+	# allPlatesCrop = [short[:6] for short in allFullPlates]
+	# print "Option 5 First 6 digits: "
+
+	# allPlatesCrop = [short[:5] for short in allFullPlates]
+	# print "Option 6 First 5 digits: "
+
+	# allPlatesCrop = allFullPlates
+	# print "All plates: "
+
+	uniquePlateMatchRoute = dict()
+	for x in range(len(allPlatesCrop)):
+		try:
+			if int(allRouteVals[x]) in K2CP:
+				route = "K2CP"
+			elif allRouteVals[x] in MP2W:
+				route = "MP2W"
+			elif int(allRouteVals[x]) in MP2CP:
+				route = "MP2CP"
+		except:
+			route = "MP2W"
+
+		if allPlatesCrop[x] not in uniquePlateMatchRoute:
+			uniquePlateMatchRoute[allPlatesCrop[x]] = [route]
+		elif allPlatesCrop[x] in uniquePlateMatchRoute:
+			uniquePlateMatchRoute[allPlatesCrop[x]].append(route)
+
+	print uniquePlateMatchRoute.keys()
+	print "uniquePlateMatchRoute len: ", len(uniquePlateMatchRoute)
+
+	print "=============================================="
+
+	print "Plates on multiple routes"
+
+	multiplePlatesCount = 0
+	for plate in uniquePlateMatchRoute:
+		if (len(uniquePlateMatchRoute[plate]) > 1) & (len(set(uniquePlateMatchRoute[plate]))>1):
+			print  str(plate) + " : " + str(uniquePlateMatchRoute[plate])
+			multiplePlatesCount += 1
+	print "Number of plates with the same code across all lines: ", multiplePlatesCount
+
+
+if __name__ == '__main__':
+	file = open("plates.txt", 'rw')
+	allFullPlates = []
+	allRouteVals = []
+
+	for line in file:
+		parse = line.rstrip()
+		parts = parse.split()
+
+		allRouteVals.append(parts[0])
+		allFullPlates.append(parts[1])
+	file.close()
+
 	K2CP = [607]
 	MP2CP = [99, 116, 117, 118, 119, 258, 259, 260, 261, 452]
 	MP2W = ["8", "234", "F81", "F82"]
 
-	maBin = []
-	routeLen = 0
-	for x in range(len(massiveBus)):
-		for busNum in MP2CP:
-			if massiveBus[x] == str(busNum):
-				routeLen += 1
-				maBin.append(massiveArray[x])
 	# print "LINE: Khayelitsha to Cape Town"
+	# print "LINE: Mitchells Plain to Cape Town"
 	# print "LINE: Mitchells Plain to Wynberg"
-	print "LINE: Mitchells Plain to Cape Town"
-	print "All License Plates: ", maBin
-	print "Number of License Plates: ", len(maBin)
 
-	ID = 0
-	for each in range(len(maBin)):
-		count = maBin.count(maBin[each])
-		if count > 1:
-			# print "SAME: ", maBin.count(maBin[each])
-			# print "SAME EACH: ", each
-			# print "SAME VAL: ", maBin[each]
-			ID += 1
-		else:
-			ID += 1
-	# print "ID = ", ID
+	# analyzeRoutesClusterOnSingleLine(MP2W)
 
-	uniqueID = [maBin[0]]
-
-	print "========================================================="
-
-	# for each in range(len(maBin)):
-	# 	for allVals in range(len(uniqueID)):
-	# 		if maBin[each] == uniqueID[allVals]:
-	# 			continue
-	# 		elif allVals == len(uniqueID):
-	# 			print "len(uniqueID) old: ", len(uniqueID)
-	# 			print "allVals: ", allVals
-	# 			uniqueID.append(maBin[each])
-
-	each = 0
-	allVals = 0
-	while each < len(maBin):
-		allVals = 0
-		while allVals < len(uniqueID):
-			# print "EACH: ", each
-			# print "ALL: ", allVals
-			# print "each: ", maBin[each]
-			# print "allVals: ", uniqueID[allVals]
-			# # print "len(maBin): ", len(maBin)
-			# # if int(each) != int(allVals):
-			if (maBin[each] == uniqueID[allVals]):
-					# print "each: ", maBin[each]
-					# print "allVals: ", uniqueID[allVals]
-					# print "MATCH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-					break
-			elif int(allVals) == (len(uniqueID)-1):
-				# print "this is the end!"
-				# print "also each: ", each
-				# print "allVals: ", allVals
-				if (maBin[each] == uniqueID[allVals]):
-					break
-				else:
-					uniqueID.append(maBin[each])
-					# print "uniqueID: ", uniqueID
-				# if maBin[each] == maBin[allVals]:
-				# 	print "TF: ", (maBin[each] != maBin[allVals])
-				# 	print "THE SAME"
-				# 	print "each: ", maBin[each]
-				# 	print "allVals: ", maBin[allVals]
-				# if str(maBin[each]) == str(maBin[allVals]):
-				# 	print "EACH: ", each
-				# 	print "each val: ", maBin[each]
-				# 	print "ALL: ", allVals
-				# 	print "all val: ", maBin[allVals]
-				# 	maBin.remove(maBin[allVals])
-					# print "new LEN: ", len(maBin)
-			allVals += 1
-		# print "NEXT EACH VALUE ==================="
-		each += 1
-
-	# print "routeNum: ", str(busNum)
-	# print "routeLen: ", routeLen
-	print "Unique License Plates: ", uniqueID
-	print "Number of unique plates: ", len(uniqueID)
-
-	shortBin = []
-	for short in range(len(uniqueID)):
-		# shortBin.append(uniqueID[short][len(parts[1])-3:])
-		shortBin.append(uniqueID[short][2:5])
-		# shortBin.append(uniqueID[short])
-
-	print "========================================================="
-
-	print "4 Digits after first two letters: ", shortBin
-
-	print "----------"
-
-	for each in range(len(shortBin)):
-		count = shortBin.count(shortBin[each])
-		if count > 1:
-			print "Number of shortID overlap: ", shortBin.count(shortBin[each])
-			# print "SAME EACH: ", each
-			print "ShortID value: ", shortBin[each]
-			print "----------"
-
-analyzeRoutesCluster()
-
-
-def analyzeAllRoutesIndividually():
-	route = massiveBus[0]
-	routeLen = 0
-	maBin = []
-	print "route: ", route
-	for x in range(len(massiveBus)):
-		if route == massiveBus[x]:
-			routeLen += 1
-			maBin.append(massiveArray[x])
-		else:
-			print "routeLen: ", routeLen
-			routeLen = 1
-			print "BIN: ", maBin
-			for each in range(len(maBin)):
-				count = maBin.count(maBin[each])
-				if count > 1:
-					print "SAME: ", maBin.count(maBin[each])
-					print "SAME EACH: ", each
-					print "SAME VAL: ", maBin[each]
-
-			maBin = [massiveArray[x]]
-			print "_______________________________"
-			route = massiveBus[x]
-			print "route: ", route
-
-# print "routeLen: ", routeLen
-# routeLen = 1
-# print "BIN: ", maBin
-# for each in range(len(maBin)):
-# 	count = maBin.count(maBin[each])
-# 	if count > 1:
-# 		print "SAME: ", maBin.count(maBin[each])
-# 		print "SAME EACH: ", each
-# 		print "SAME VAL: ", maBin[each]
-
-# numCopies = 0
-# for val in range(len(massiveArray)):
-# 	# print "counts: ", massiveArray.count(val)
-# 	if massiveArray.count(massiveArray[val]) > 1:
-# 		numCopies+=1
-# 		# print "SAME"
-# print "Copies: ", numCopies
-
-
-file.close()
+	print "All lines"
+	analyzeRoutesClusterAcrossAllLines()

@@ -1,5 +1,9 @@
-#Original code written by Wajeeha Ahmad and Tawanda Zimuto
-#Major reconstruction edits by Michelle Sit
+"""
+
+First Citivan code written by Wajeeha Ahmad and Tawanda Zimuto
+
+"""
+
 
 require 'rubygems' 
 require 'net/http' 
@@ -16,15 +20,15 @@ module Couch
       @options = options 
     end 
  
-    def DELETE(uri) 
+    def delete(uri) 
       request(Net::HTTP::Delete.new(uri)) 
     end 
  
-    def GET(uri) 
-      request(Net::HTTP::get.new(uri)) 
+    def get(uri) 
+      request(Net::HTTP::Get.new(uri)) 
     end 
  
-    def PUT(uri, json) 
+    def put(uri, json) 
       req = Net::HTTP::Put.new(uri) 
       req["content-type"] = "application/json"
       req.body = json 
@@ -50,23 +54,23 @@ end
  
 #This is a helper method to get data from couchDB 
 def getCounchDBData 
-  url = URI.parse("http://citivan.cloudant.com/mainDataBase/")
+  url = URI.parse("http://citivan.iriscouch.com/_utils") 
   server = Couch::Server.new(url.host, url.port) 
-  res = server.get("/") 
+  res = server.get("/sms/currentUsers") 
   json = res.body 
   json = JSON.parse(json) 
 end
- 
+
 def updateCouchDBData(callerID, extra)
 
     excep = false
- 
-    begin     
+
+    begin
         #Call the getCounchDBData method to get the database information
         log "***************************** BEFORE JSON *************************"
         json = getCounchDBData 
         log "***************************** JSON IS SET *************************"
-        url = URI.parse("http://citivan.cloudant.com/mainDataBase/") 
+        url = URI.parse("http://citivan.iriscouch.com/_utils") 
         server = Couch::Server.new(url.host, url.port) 
         log "***************************** NEW SERVER **************************"
         if json != nil
@@ -179,7 +183,7 @@ def updateCouchDBData(callerID, extra)
     end
 end
  
-#Main method :
+ 
 messages = [
 {"1"=>"Welcome to CitiVan! Please answer the following questions.",
 "message"=> "1. What is your bus number?"},

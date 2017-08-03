@@ -15,8 +15,6 @@
 #Everything in the json starts from 1 instead of 0. This is to improve readability for
 #non-computer science people.
 
-#Create server for SMS questions to be sent to
-
 require 'rubygems' 
 require 'net/http' 
 require 'json' 
