@@ -2,7 +2,7 @@
 Written by Michelle Sit
 
 Used to analyze different combinations of unique license plate characters
-Program can analyze 3 lines or across all lines
+Program can analyze 3 minibus taxi lines or across all the lines
 
 """
 
